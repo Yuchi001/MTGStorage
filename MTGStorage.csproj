@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProjectGuid>{841A3A17-639E-411F-9548-EF7D14574528}</ProjectGuid>
+        <OutputType>WinExe</OutputType>
+        <RootNamespace>MTGStorage</RootNamespace>
+        <AssemblyName>MTGStorage</AssemblyName>
+        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+        <FileAlignment>512</FileAlignment>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <Deterministic>true</Deterministic>
+        <ApplicationIcon>Resources\CardIcon.ico</ApplicationIcon>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="Microsoft.VisualBasic" />
+        <Reference Include="MTGStorage">
+          <HintPath>bin\Debug\MTGStorage.exe</HintPath>
+        </Reference>
+        <Reference Include="netstandard" />
+        <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+          <HintPath>packages\Newtonsoft.Json.13.0.5-beta1\lib\net45\Newtonsoft.Json.dll</HintPath>
+        </Reference>
+        <Reference Include="System"/>
+        <Reference Include="System.Core"/>
+        <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+          <HintPath>packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Design" />
+        <Reference Include="System.Transactions" />
+        <Reference Include="System.Xml.Linq"/>
+        <Reference Include="System.Data.DataSetExtensions"/>
+        <Reference Include="Microsoft.CSharp"/>
+        <Reference Include="System.Data"/>
+        <Reference Include="System.IO.Compression" />
+        <Reference Include="System.IO.Compression.FileSystem" />
+        <Reference Include="System.Deployment"/>
+        <Reference Include="System.Drawing"/>
+        <Reference Include="System.Net.Http"/>
+        <Reference Include="System.Windows.Forms"/>
+        <Reference Include="System.Xml"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="AddCardWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="AddCardWindow.Designer.cs">
+          <DependentUpon>AddCardWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="AddLocationWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="AddLocationWindow.Designer.cs">
+          <DependentUpon>AddLocationWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="AdvancedSearchOptions.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="AdvancedSearchOptions.Designer.cs">
+          <DependentUpon>AdvancedSearchOptions.cs</DependentUpon>
+        </Compile>
+        <Compile Include="AutoLocationSearchWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="AutoLocationSearchWindow.Designer.cs">
+          <DependentUpon>AutoLocationSearchWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="CardBulkShipmentWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="CardBulkShipmentWindow.Designer.cs">
+          <DependentUpon>CardBulkShipmentWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="CardSearchWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="CardSearchWindow.Designer.cs">
+          <DependentUpon>CardSearchWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="CheckLocationsWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="CheckLocationsWindow.Designer.cs">
+          <DependentUpon>CheckLocationsWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="CustomUI\CardElement.cs">
+          <SubType>UserControl</SubType>
+        </Compile>
+        <Compile Include="CustomUI\CardElement.Designer.cs">
+          <DependentUpon>CardElement.cs</DependentUpon>
+        </Compile>
+        <Compile Include="CustomUI\Extensions.cs" />
+        <Compile Include="Database\DataObjects\CardFace.cs" />
+        <Compile Include="Database\DataObjects\Extensions.cs" />
+        <Compile Include="Database\DataObjects\SearchOptions.cs" />
+        <Compile Include="Features\ShipmentManager.cs" />
+        <Compile Include="ScryfalldSearchWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="ScryfalldSearchWindow.Designer.cs">
+          <DependentUpon>ScryfalldSearchWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="CustomUI\NoAutoSelectComboBox.cs" />
+        <Compile Include="Database\Database.cs" />
+        <Compile Include="Database\DataObjects\Card.cs" />
+        <Compile Include="Database\DataObjects\Location.cs" />
+        <Compile Include="Database\DataObjects\ScryfallAutocomplete.cs" />
+        <Compile Include="Database\DataObjects\ScryfallCard.cs" />
+        <Compile Include="Database\DataObjects\ScryfallPrints.cs" />
+        <Compile Include="Database\DataObjects\ScryfallSearch.cs" />
+        <Compile Include="Database\Endpoints\CardEndpoints.cs" />
+        <Compile Include="Database\Endpoints\ExportImportEndpoints.cs" />
+        <Compile Include="Database\Endpoints\LocationEndpoints.cs" />
+        <Compile Include="Database\Endpoints\ScryfallEndpoints.cs" />
+        <Compile Include="MainWindow.cs">
+            <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="MainWindow.Designer.cs">
+            <DependentUpon>MainWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="Program.cs" />
+        <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="RemoveCardWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="RemoveCardWindow.Designer.cs">
+          <DependentUpon>RemoveCardWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="RemoveLocationWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="RemoveLocationWindow.Designer.cs">
+          <DependentUpon>RemoveLocationWindow.cs</DependentUpon>
+        </Compile>
+        <Compile Include="SryfallSearchLoadingWindow.cs">
+          <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="SryfallSearchLoadingWindow.Designer.cs">
+          <DependentUpon>SryfallSearchLoadingWindow.cs</DependentUpon>
+        </Compile>
+        <EmbeddedResource Include="AddCardWindow.resx">
+          <DependentUpon>AddCardWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="AddLocationWindow.resx">
+          <DependentUpon>AddLocationWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="AdvancedSearchOptions.resx">
+          <DependentUpon>AdvancedSearchOptions.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="AutoLocationSearchWindow.resx">
+          <DependentUpon>AutoLocationSearchWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="CardBulkShipmentWindow.resx">
+          <DependentUpon>CardBulkShipmentWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="CardSearchWindow.resx">
+          <DependentUpon>CardSearchWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="CheckLocationsWindow.resx">
+          <DependentUpon>CheckLocationsWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="CustomUI\CardElement.resx">
+          <DependentUpon>CardElement.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="ScryfalldSearchWindow.resx">
+          <DependentUpon>ScryfalldSearchWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="MainWindow.resx">
+          <DependentUpon>MainWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Properties\Resources.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+            <SubType>Designer</SubType>
+        </EmbeddedResource>
+        <Compile Include="Properties\Resources.Designer.cs">
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+        <EmbeddedResource Include="RemoveCardWindow.resx">
+          <DependentUpon>RemoveCardWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="RemoveLocationWindow.resx">
+          <DependentUpon>RemoveLocationWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Include="SryfallSearchLoadingWindow.resx">
+          <DependentUpon>SryfallSearchLoadingWindow.cs</DependentUpon>
+        </EmbeddedResource>
+        <None Include="packages.config" />
+        <None Include="Properties\Settings.settings">
+            <Generator>SettingsSingleFileGenerator</Generator>
+            <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+        </None>
+        <Compile Include="Properties\Settings.Designer.cs">
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Settings.settings</DependentUpon>
+            <DesignTimeSharedInput>True</DesignTimeSharedInput>
+        </Compile>
+        <None Include="Resources\CardIcon.ico" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="App.config" />
+    </ItemGroup>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <Import Project="packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+    <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+      <PropertyGroup>
+        <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
+      </PropertyGroup>
+      <Error Condition="!Exists('packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+    </Target>
+</Project>

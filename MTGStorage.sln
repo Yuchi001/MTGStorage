@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTGStorage", "MTGStorage.csproj", "{841A3A17-639E-411F-9548-EF7D14574528}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{841A3A17-639E-411F-9548-EF7D14574528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{841A3A17-639E-411F-9548-EF7D14574528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{841A3A17-639E-411F-9548-EF7D14574528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{841A3A17-639E-411F-9548-EF7D14574528}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
