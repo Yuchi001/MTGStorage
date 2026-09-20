@@ -25,6 +25,11 @@ namespace MTGStorage.Features
         }
 
         public void Clear() => _cards.Clear();
+
+        public int GetCount(Card card) => _cards.ContainsKey(card) ? _cards[card] : 0;
+
+        public List<ShipmentCard> GetSelectedCards() => _cards.Where(pair => pair.Value > 0)
+            .Select(pair => new ShipmentCard(pair.Key, pair.Value)).ToList();
         
         public bool CreatedShipment() => _cards.Sum(e => e.Value) > 0;
 

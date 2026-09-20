@@ -15,7 +15,9 @@ namespace MTGStorage.CustomUI
             InitializeComponent();
             Card = card;
             Manager = manager;
-            cardPictureBox.LoadAsync(card.ImageUrl);
+            if (!string.IsNullOrEmpty(card.ImageUrl)) cardPictureBox.LoadAsync(card.ImageUrl);
+            cardToShipTextbox.Maximum = Math.Max(0, card.Count);
+            cardToShipTextbox.Value = Math.Min(card.Count, manager.GetCount(card));
             inStockLabel.Text = $"In stock: {card.Count}";
             priceLabel.Text = $"{card.Price}\u20ac";
         }
@@ -42,6 +44,7 @@ namespace MTGStorage.CustomUI
 
         private void cardPictureBox_Click(object sender, EventArgs e)
         {
+            if (Card == null || Manager == null || cardToShipTextbox.Value >= cardToShipTextbox.Maximum) return;
             cardToShipTextbox.Value++;
             var count = (int)cardToShipTextbox.Value;
             if (count < 0) cardToShipTextbox.Value = 0;

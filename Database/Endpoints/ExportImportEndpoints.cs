@@ -103,9 +103,15 @@ namespace MTGStorage.Database.Endpoints
                     ValidateTable(locations, locationColumns, "Locations.csv");
                     ValidateTable(cards, cardColumns, "Cards.csv");
                     ValidateTable(cardFaces, cardFaceColumns, "CardFaces.csv");
+                    var recoveredLocations = RecoverMissingLocations(locations, cards);
+                    ValidateTable(locations, locationColumns, "Locations.csv");
                     ValidateRelationships(locations, cards, cardFaces);
 
                     if (MessageBox.Show(
+                            (recoveredLocations == 0 ? string.Empty :
+                                "The archive references " + recoveredLocations +
+                                " missing location(s). They will be created as 'Recovered location <ID>' " +
+                                "to preserve their cards. Review these locations after importing.\n\n") +
                             "Importing will replace all current locations and cards. Continue?",
                             "Confirm CSV Import",
                             MessageBoxButtons.YesNo,
@@ -383,7 +389,7 @@ namespace MTGStorage.Database.Endpoints
             var locationIds = GetIds(locations);
             var cardIds = GetIds(cards);
 
-            ValidateForeignKeys(cards, "LocationID", locationIds, "Locations.csv");
+            ValidateForeignKeys(cards, "LocationID", locationIds, "Cards.csv");
             ValidateForeignKeys(cardFaces, "CardID", cardIds, "CardFaces.csv");
         }
 
@@ -393,6 +399,48 @@ namespace MTGStorage.Database.Endpoints
             return new HashSet<long>(table.Rows.Select(row => long.Parse(
                 row[idIndex],
                 CultureInfo.InvariantCulture)));
+        }
+
+        // Older databases did not enforce Card.LocationID foreign keys. Preserve their
+        // cards by reconstructing explicitly labelled locations, never by dropping rows.
+        private static int RecoverMissingLocations(CsvTable locations, CsvTable cards)
+        {
+            var locationIds = GetIds(locations);
+            var locationIndex = Array.IndexOf(cards.Headers, "LocationID");
+            var countIndex = Array.IndexOf(cards.Headers, "Count");
+            var recoveredCount = 0;
+            var groups = cards.Rows
+                .Where(row => !string.IsNullOrEmpty(row[locationIndex]))
+                .GroupBy(row => long.Parse(row[locationIndex], CultureInfo.InvariantCulture));
+
+            foreach (var group in groups)
+            {
+                if (locationIds.Contains(group.Key))
+                {
+                    continue;
+                }
+
+                var capacity = group.Sum(row => string.IsNullOrEmpty(row[countIndex])
+                    ? 0L : Math.Max(0L, long.Parse(row[countIndex], CultureInfo.InvariantCulture)));
+                var recovered = new string[locations.Headers.Length];
+                for (var index = 0; index < recovered.Length; index++)
+                {
+                    switch (locations.Headers[index])
+                    {
+                        case "ID": recovered[index] = group.Key.ToString(CultureInfo.InvariantCulture); break;
+                        case "Code": recovered[index] = "Recovered location " + group.Key.ToString(CultureInfo.InvariantCulture); break;
+                        case "Capacity": recovered[index] = Math.Max(1L, capacity).ToString(CultureInfo.InvariantCulture); break;
+                        case "MinPrice": recovered[index] = "0"; break;
+                        default: throw new InvalidDataException("Cannot recover locations with an unknown location column.");
+                    }
+                }
+
+                locations.Rows.Add(recovered);
+                locationIds.Add(group.Key);
+                recoveredCount++;
+            }
+
+            return recoveredCount;
         }
 
         private static void ValidateForeignKeys(
@@ -416,7 +464,8 @@ namespace MTGStorage.Database.Endpoints
                     !parentIds.Contains(foreignKey))
                 {
                     throw new InvalidDataException(
-                        fileName + " row " + (rowIndex + 2) + " references a missing " + columnName + ".");
+                        fileName + " row " + (rowIndex + 2) + " references a missing " + columnName +
+                        " (" + value + ").");
                 }
             }
         }

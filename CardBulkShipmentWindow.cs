@@ -17,18 +17,21 @@ namespace MTGStorage
     {
         private List<LocationCardPair> LocationCardPairs;
         private CardElement _hoverControl;
+        private int? _sourceLocationId;
         
         public CardBulkShipmentWindow()
         {
             InitializeComponent();
         }
 
-        public async Task Init(ShipmentManager shipmentManager)
+        public async Task Init(ShipmentManager shipmentManager, int? sourceLocationId = null)
         {
+            _sourceLocationId = sourceLocationId;
             LocationCardPairs = new List<LocationCardPair>();
             while (shipmentManager.Next(out var shipmentCard))
             {
-                var pairs = await LocationCardPair.CreatePair(shipmentCard);
+                if (shipmentCard.Count <= 0) continue;
+                var pairs = await LocationCardPair.CreatePair(shipmentCard, sourceLocationId);
                 LocationCardPairs.AddRange(pairs);
             }
 
@@ -52,6 +55,7 @@ namespace MTGStorage
             
             async Task<Image> LoadImage(string url)
             {
+                if (string.IsNullOrEmpty(url)) return null;
                 using (var client = new HttpClient())
                 {
                     var bytes = await client.GetByteArrayAsync(url);
@@ -170,18 +174,28 @@ namespace MTGStorage
                 Location = location;
             }
             
-            public static async Task<List<LocationCardPair>> CreatePair(ShipmentManager.ShipmentCard shipmentCard)
+            public static async Task<List<LocationCardPair>> CreatePair(ShipmentManager.ShipmentCard shipmentCard, int? sourceLocationId = null)
             {
                 var locationCardPairList = new List<LocationCardPair>();
-                var cards = await CardEndpoints.GetCards(shipmentCard.Card.Name, shipmentCard.Card.PrintID, false);
+                List<Card> cards;
+                if (sourceLocationId.HasValue)
+                {
+                    var selected = await CardEndpoints.GetCard(shipmentCard.Card.ID);
+                    cards = selected != null && selected.LocationID == sourceLocationId.Value
+                        ? new List<Card> { selected } : new List<Card>();
+                }
+                else
+                    cards = await CardEndpoints.GetCards(shipmentCard.Card.Name, shipmentCard.Card.PrintID, false);
                 var count = shipmentCard.Count;
+                if (cards.Sum(c => (long)c.Count) < count)
+                    throw new InvalidOperationException("The selected cards are no longer available.");
 
                 while (count > 0)
                 {
                     var firstLocationCard = cards.First();
-                    count -= firstLocationCard.Count;
-                    count = Math.Max(count, 0);
-                    firstLocationCard.Count = shipmentCard.Count - count;
+                    var taken = Math.Min(count, firstLocationCard.Count);
+                    count -= taken;
+                    firstLocationCard.Count = taken;
                     locationCardPairList.Add(new LocationCardPair(firstLocationCard, firstLocationCard.Location));
                     cards.Remove(firstLocationCard);
                 }
@@ -192,6 +206,7 @@ namespace MTGStorage
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
+            if (_sourceLocationId.HasValue) { Close(); return; }
             Application.Restart();
         }
 
@@ -207,6 +222,7 @@ namespace MTGStorage
 
             foreach (var pair in LocationCardPairs) await CardEndpoints.RemoveCard(pair.Card.ID, pair.Card.Count);
             
+            if (_sourceLocationId.HasValue) { Close(); return; }
             Application.Restart();
         }
 

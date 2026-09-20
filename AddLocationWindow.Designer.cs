@@ -103,6 +103,7 @@ namespace MTGStorage
             // capacityTextBox
             // 
             this.capacityTextBox.Location = new System.Drawing.Point(12, 186);
+            this.capacityTextBox.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
             this.capacityTextBox.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             this.capacityTextBox.Name = "capacityTextBox";
             this.capacityTextBox.Size = new System.Drawing.Size(175, 20);
@@ -122,6 +123,7 @@ namespace MTGStorage
             this.minimumPriceTextBox.DecimalPlaces = 2;
             this.minimumPriceTextBox.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
             this.minimumPriceTextBox.Location = new System.Drawing.Point(197, 186);
+            this.minimumPriceTextBox.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
             this.minimumPriceTextBox.Name = "minimumPriceTextBox";
             this.minimumPriceTextBox.Size = new System.Drawing.Size(175, 20);
             this.minimumPriceTextBox.TabIndex = 2;

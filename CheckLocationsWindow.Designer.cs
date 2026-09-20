@@ -39,6 +39,8 @@ namespace MTGStorage
             this.capacity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cards = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.percentage = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.edit = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.viewCards = new System.Windows.Forms.DataGridViewButtonColumn();
             this.closeButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.locationTable)).BeginInit();
             this.SuspendLayout();
@@ -58,8 +60,9 @@ namespace MTGStorage
             this.locationTable.AllowUserToAddRows = false;
             this.locationTable.AllowUserToDeleteRows = false;
             this.locationTable.AllowUserToResizeColumns = false;
+            this.locationTable.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.locationTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.locationTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { this.code, this.minPrice, this.capacity, this.cards, this.percentage });
+            this.locationTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { this.code, this.minPrice, this.capacity, this.cards, this.percentage, this.edit, this.viewCards });
             this.locationTable.Location = new System.Drawing.Point(12, 142);
             this.locationTable.Name = "locationTable";
             this.locationTable.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
@@ -72,30 +75,53 @@ namespace MTGStorage
             this.code.HeaderText = "Code";
             this.code.Name = "code";
             this.code.ReadOnly = true;
+            this.code.Width = 75;
             // 
             // minPrice
             // 
             this.minPrice.HeaderText = "Min. Price";
             this.minPrice.Name = "minPrice";
             this.minPrice.ReadOnly = true;
+            this.minPrice.Width = 75;
             // 
             // capacity
             // 
             this.capacity.HeaderText = "Capacity";
             this.capacity.Name = "capacity";
             this.capacity.ReadOnly = true;
+            this.capacity.Width = 55;
             // 
             // cards
             // 
             this.cards.HeaderText = "Cards";
             this.cards.Name = "cards";
             this.cards.ReadOnly = true;
+            this.cards.Width = 50;
             // 
             // percentage
             // 
             this.percentage.HeaderText = "Percentage";
             this.percentage.Name = "percentage";
             this.percentage.ReadOnly = true;
+            this.percentage.Width = 75;
+            // 
+            // edit
+            // 
+            this.edit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.edit.HeaderText = "Edit";
+            this.edit.Name = "edit";
+            this.edit.Text = "Edit";
+            this.edit.UseColumnTextForButtonValue = true;
+            this.edit.Width = 50;
+            // 
+            // viewCards
+            // 
+            this.viewCards.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.viewCards.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.viewCards.HeaderText = "Open";
+            this.viewCards.Name = "viewCards";
+            this.viewCards.Text = "Open";
+            this.viewCards.UseColumnTextForButtonValue = true;
             // 
             // closeButton
             // 
@@ -126,6 +152,9 @@ namespace MTGStorage
             ((System.ComponentModel.ISupportInitialize)(this.locationTable)).EndInit();
             this.ResumeLayout(false);
         }
+
+        private System.Windows.Forms.DataGridViewButtonColumn edit;
+        private System.Windows.Forms.DataGridViewButtonColumn viewCards;
 
         private System.Windows.Forms.Button closeButton;
 

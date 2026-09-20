@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -256,114 +256,29 @@ namespace MTGStorage.Database.Endpoints
 
         public static async Task<(Location location, int maxCount)> FindLocation(Card card)
         {
-            using (var connection = Database.GetConnection())
-            {
-                await connection.OpenAsync();
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = @"
-                        WITH Locations AS
-                        (
-                            SELECT
-                                l.ID,
-                                l.Code,
-                                l.Capacity,
-                                l.MinPrice,
-                                COALESCE(SUM(c.Count), 0) AS UsedSpace,
-
-                                CASE
-                                    WHEN SUM(
-                                        CASE
-                                            WHEN c.Name = @name
-                                            THEN c.Count
-                                            ELSE 0
-                                        END
-                                    ) > 0
-                                    THEN 1
-                                    ELSE 0
-                                END AS HasCard
-
-                            FROM Location l
-                            LEFT JOIN Card c
-                                ON c.LocationID = l.ID
-
-                            GROUP BY
-                                l.ID,
-                                l.Code,
-                                l.Capacity,
-                                l.MinPrice
-                        ),
-
-                        BestMinPrice AS
-                        (
-                            SELECT MAX(MinPrice) AS MinPrice
-                            FROM Locations
-                            WHERE
-                                MinPrice <= @price
-                                AND UsedSpace < Capacity
-                        )
-
-                        SELECT
-                            ID,
-                            Code,
-                            Capacity,
-                            MinPrice,
-                            Capacity - UsedSpace AS FreeSpace
-                        FROM Locations
-                        WHERE
-                            -- 1. Musi być najwyższy pasujący MinPrice
-                            MinPrice = (SELECT MinPrice FROM BestMinPrice)
-
-                            -- 2. Lokalizacja nie może być pełna
-                            AND UsedSpace < Capacity
-
-                            AND
-                            (
-                                -- 3. Jeśli zawiera tę samą kartę,
-                                --    może być nawet >= 90%
-                                HasCard = 1
-
-                                OR
-
-                                -- 4. Jeśli nie zawiera karty,
-                                --    musi być zapełniona < 90%
-                                CAST(UsedSpace AS REAL) / Capacity < 0.90
-                            )
-
-                        ORDER BY
-                            -- Najpierw lokalizacja z tą samą kartą
-                            HasCard DESC,
-
-                            -- Potem najbardziej zapełniona
-                            CAST(UsedSpace AS REAL) / Capacity DESC
-
-                        LIMIT 1;
-                    ";
-
-                    command.Parameters.AddWithValue("@price", card.Price);
-                    command.Parameters.AddWithValue("@name", card.Name);
-
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if (!await reader.ReadAsync())
-                            return (null, 0);
-
-                        var location = new Location
-                        {
-                            ID = reader.GetInt32(0),
-                            Code = reader.GetString(1),
-                            Capacity = reader.GetInt32(2),
-                            MinPrice = reader.GetDecimal(3)
-                        };
-
-                        var maxCount = reader.GetInt32(4);
-
-                        return (location, maxCount);
-                    }
-                }
-            }
+            var location = FindLocation(await GetLocations(), card);
+            return (location, location == null ? 0 : (int)FreeSpace(location));
         }
+
+        internal static long FreeSpace(Location location) => location.Capacity - location.Cards.Sum(c => (long)c.Count);
+
+        // Shared by adding cards, manual relocation and automatic relocation.
+        internal static List<Location> MatchingLocations(IEnumerable<Location> locations, Card card, int? excludedId = null)
+        {
+            var available = locations.Where(l => l.ID != excludedId && l.MinPrice <= card.Price && FreeSpace(l) > 0).ToList();
+            if (available.Count == 0) return new List<Location>();
+            var bestMinimum = available.Max(l => l.MinPrice);
+            return available.Where(l => l.MinPrice == bestMinimum &&
+                    (l.Cards.Any(c => c.Name == card.Name && c.Count > 0) ||
+                     l.Cards.Sum(c => (long)c.Count) / (decimal)l.Capacity < 0.75m))
+                .OrderByDescending(l => l.Cards.Any(c => c.Name == card.Name && c.Count > 0))
+                .ThenByDescending(l => l.Cards.Sum(c => (long)c.Count) / (decimal)l.Capacity)
+                .ThenBy(l => l.ID).ToList();
+        }
+
+        internal static Location FindLocation(IEnumerable<Location> locations, Card card, int? excludedId = null)
+            => MatchingLocations(locations, card, excludedId).FirstOrDefault();
+
         public static async Task<Location> GetLocation(int locationID)
         {
             Location location = null;

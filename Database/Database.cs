@@ -35,7 +35,8 @@ namespace MTGStorage.Database
                     CREATE TABLE IF NOT EXISTS Location (
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                         Code TEXT NOT NULL,
-                        Capacity INTEGER NOT NULL
+                        Capacity INTEGER NOT NULL,
+                        MinPrice NUMERIC NOT NULL DEFAULT 0
                     );
 
                     CREATE TABLE IF NOT EXISTS Card (
@@ -43,8 +44,16 @@ namespace MTGStorage.Database
                         Name TEXT NOT NULL,
                         PrintID TEXT NOT NULL,
                         ImageUrl TEXT NOT NULL,
-                        Count INTEGER,
-                        LocationID INTEGER,
+                        Count INTEGER NOT NULL DEFAULT 0,
+                        LocationID INTEGER NOT NULL,
+                        Price NUMERIC NOT NULL DEFAULT 0,
+                        Rank INTEGER NOT NULL DEFAULT 0,
+                        OracleText TEXT NOT NULL DEFAULT '',
+                        Colors TEXT NOT NULL DEFAULT '',
+                        ColorIdentity TEXT NOT NULL DEFAULT '',
+                        ManaCost TEXT NOT NULL DEFAULT '',
+                        ConvertedManaCost INTEGER NOT NULL DEFAULT 0,
+                        Types TEXT NOT NULL DEFAULT '',
                         FOREIGN KEY (LocationID) REFERENCES Location(ID) ON DELETE CASCADE
                     );
 
@@ -71,7 +80,7 @@ namespace MTGStorage.Database
                 }
 
                 EnsureCardFaceCascadeDelete(connection);
-                EnsureCardFaceColumns(connection);
+                EnsureMissingColumns(connection);
             }
         }
 
@@ -103,10 +112,10 @@ namespace MTGStorage.Database
                 return;
             }
 
-            var colorsColumn = HasCardFaceColumn(connection, "Colors")
+            var colorsColumn = HasColumn(connection, "CardFace", "Colors")
                 ? "Colors"
                 : "''";
-            var manaCostColumn = HasCardFaceColumn(connection, "ManaCost")
+            var manaCostColumn = HasColumn(connection, "CardFace", "ManaCost")
                 ? "ManaCost"
                 : "''";
 
@@ -143,36 +152,86 @@ namespace MTGStorage.Database
             }
         }
 
-        private static void EnsureCardFaceColumns(SQLiteConnection connection)
+        private static void EnsureMissingColumns(SQLiteConnection connection)
         {
-            if (!HasCardFaceColumn(connection, "Colors"))
+            EnsureColumn(
+                connection,
+                "Location",
+                "MinPrice",
+                "NUMERIC NOT NULL DEFAULT 0");
+
+            EnsureColumn(connection, "Card", "Price", "NUMERIC NOT NULL DEFAULT 0");
+            EnsureColumn(connection, "Card", "Rank", "INTEGER NOT NULL DEFAULT 0");
+            EnsureColumn(
+                connection,
+                "Card",
+                "OracleText",
+                "TEXT NOT NULL DEFAULT ''");
+            EnsureColumn(
+                connection,
+                "Card",
+                "Colors",
+                "TEXT NOT NULL DEFAULT ''");
+            EnsureColumn(
+                connection,
+                "Card",
+                "ColorIdentity",
+                "TEXT NOT NULL DEFAULT ''");
+            EnsureColumn(
+                connection,
+                "Card",
+                "ManaCost",
+                "TEXT NOT NULL DEFAULT ''");
+            EnsureColumn(
+                connection,
+                "Card",
+                "ConvertedManaCost",
+                "INTEGER NOT NULL DEFAULT 0");
+            EnsureColumn(
+                connection,
+                "Card",
+                "Types",
+                "TEXT NOT NULL DEFAULT ''");
+
+            EnsureColumn(
+                connection,
+                "CardFace",
+                "Colors",
+                "TEXT NOT NULL DEFAULT ''");
+            EnsureColumn(
+                connection,
+                "CardFace",
+                "ManaCost",
+                "TEXT NOT NULL DEFAULT ''");
+        }
+
+        private static void EnsureColumn(
+            SQLiteConnection connection,
+            string tableName,
+            string columnName,
+            string definition)
+        {
+            if (HasColumn(connection, tableName, columnName))
             {
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText =
-                        "ALTER TABLE CardFace ADD COLUMN Colors TEXT NOT NULL DEFAULT '';";
-                    command.ExecuteNonQuery();
-                }
+                return;
             }
 
-            if (!HasCardFaceColumn(connection, "ManaCost"))
+            using (var command = connection.CreateCommand())
             {
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText =
-                        "ALTER TABLE CardFace ADD COLUMN ManaCost TEXT NOT NULL DEFAULT '';";
-                    command.ExecuteNonQuery();
-                }
+                command.CommandText =
+                    $"ALTER TABLE {tableName} ADD COLUMN {columnName} {definition};";
+                command.ExecuteNonQuery();
             }
         }
 
-        private static bool HasCardFaceColumn(
+        private static bool HasColumn(
             SQLiteConnection connection,
+            string tableName,
             string columnName)
         {
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "PRAGMA table_info(CardFace);";
+                command.CommandText = $"PRAGMA table_info({tableName});";
 
                 using (var reader = command.ExecuteReader())
                 {

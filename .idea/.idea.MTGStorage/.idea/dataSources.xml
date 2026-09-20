@@ -6,7 +6,7 @@
       <synchronize>true</synchronize>
       <configured-by-url>true</configured-by-url>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\PC\MTGStorage\MTGStorage\bin\Debug\mtgstorage.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:\Users\PC\MTGStorage\bin\Debug\mtgstorage.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
