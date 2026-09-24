@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace MTGStorage
 {
@@ -39,10 +39,10 @@ namespace MTGStorage
             this.cardLocationPairTable = new System.Windows.Forms.DataGridView();
             this.cardName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.set = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.image = new System.Windows.Forms.DataGridViewImageColumn();
             this.location = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.count = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.completed = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.image = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.cardLocationPairTable)).BeginInit();
             this.SuspendLayout();
             // 
@@ -91,18 +91,16 @@ namespace MTGStorage
             this.cardLocationPairTable.AllowUserToDeleteRows = false;
             this.cardLocationPairTable.AllowUserToResizeColumns = false;
             this.cardLocationPairTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.cardLocationPairTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { this.cardName, this.set, this.image, this.location, this.count, this.completed });
+            this.cardLocationPairTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { this.cardName, this.set, this.location, this.count, this.completed, this.image });
             this.cardLocationPairTable.Location = new System.Drawing.Point(12, 142);
             this.cardLocationPairTable.Name = "cardLocationPairTable";
             this.cardLocationPairTable.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
-            this.cardLocationPairTable.RowTemplate.Height = 60;
+            this.cardLocationPairTable.RowTemplate.Height = 23;
             this.cardLocationPairTable.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.cardLocationPairTable.Size = new System.Drawing.Size(510, 278);
             this.cardLocationPairTable.TabIndex = 0;
+            this.cardLocationPairTable.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardLocationPairTable_CellContentClick);
             this.cardLocationPairTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardLocationPairTable_CellEndEdit);
-            this.cardLocationPairTable.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.cardLocationPairTable_CellMouseDoubleClick);
-            this.cardLocationPairTable.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardLocationPairTable_CellMouseEnter);
-            this.cardLocationPairTable.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardLocationPairTable_CellMouseLeave);
             this.cardLocationPairTable.CurrentCellDirtyStateChanged += new System.EventHandler(this.cardLocationPairTable_CurrentCellDirtyStateChanged);
             // 
             // cardName
@@ -116,14 +114,6 @@ namespace MTGStorage
             this.set.HeaderText = "Set";
             this.set.Name = "set";
             this.set.ReadOnly = true;
-            // 
-            // image
-            // 
-            this.image.HeaderText = "Image";
-            this.image.ImageLayout = System.Windows.Forms.DataGridViewImageCellLayout.Zoom;
-            this.image.Name = "image";
-            this.image.ReadOnly = true;
-            this.image.Width = 50;
             // 
             // location
             // 
@@ -145,6 +135,15 @@ namespace MTGStorage
             this.completed.HeaderText = "Completed";
             this.completed.Name = "completed";
             // 
+            // image
+            // 
+            this.image.HeaderText = "Image";
+            this.image.Name = "image";
+            this.image.ReadOnly = true;
+            this.image.Text = "Check";
+            this.image.UseColumnTextForButtonValue = true;
+            this.image.Width = 50;
+            // 
             // CardBulkShipmentWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -165,7 +164,7 @@ namespace MTGStorage
             this.ResumeLayout(false);
         }
 
-        private System.Windows.Forms.DataGridViewImageColumn image;
+        private System.Windows.Forms.DataGridViewButtonColumn image;
 
         private System.Windows.Forms.DataGridViewTextBoxColumn count;
         private System.Windows.Forms.DataGridViewCheckBoxColumn completed;

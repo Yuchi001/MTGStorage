@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace MTGStorage.Database.DataObjects
 {
     public class ScryfallCard
     {
         public string name { get; set; }
+        [Newtonsoft.Json.JsonProperty("set_name")]
+        public string SetName { get; set; }
+        public string collector_number { get; set; }
         public ImageUris image_uris { get; set; }
         public string prints_search_uri { get; set; }
         public Prices prices { get; set; }

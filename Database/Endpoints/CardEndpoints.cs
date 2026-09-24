@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 using MTGStorage.Database.DataObjects;
@@ -227,221 +228,270 @@ namespace MTGStorage.Database.Endpoints
                 {
                     command.Transaction = transaction;
 
-                    if (sameCardInLocation == null)
-                    {
-                        command.CommandText = @"
-                            INSERT INTO Card
-                            (
-                                Name,
-                                PrintID,
-                                ImageUrl,
-                                Count,
-                                LocationID,
-                                Price,
-                                Rank,
-                                OracleText,
-                                Colors,
-                                ColorIdentity,
-                                ManaCost,
-                                ConvertedManaCost,
-                                Types
-                            )
-                            VALUES
-                            (
-                                @Name,
-                                @PrintID,
-                                @ImageUrl,
-                                @Count,
-                                @LocationID,
-                                @Price,
-                                @Rank,
-                                @OracleText,
-                                @Colors,
-                                @ColorIdentity,
-                                @ManaCost,
-                                @ConvertedManaCost,
-                                @Types
-                            );
-                        ";
-
-                        command.Parameters.AddWithValue(
-                            "@Name",
-                            card.Name);
-
-                        command.Parameters.AddWithValue(
-                            "@PrintID",
-                            card.PrintID ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ImageUrl",
-                            card.ImageUrl ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@Count",
-                            count);
-
-                        command.Parameters.AddWithValue(
-                            "@LocationID",
-                            locationID);
-
-                        command.Parameters.AddWithValue(
-                            "@Price",
-                            Math.Round(card.Price, 2));
-
-                        command.Parameters.AddWithValue(
-                            "@Rank",
-                            card.Rank);
-
-                        command.Parameters.AddWithValue(
-                            "@OracleText",
-                            card.OracleText ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@Colors",
-                            card.Colors ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ColorIdentity",
-                            card.ColorIdentity ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ManaCost",
-                            card.ManaCost ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ConvertedManaCost",
-                            card.ConvertedManaCost);
-
-                        command.Parameters.AddWithValue(
-                            "@Types",
-                            SerializeTypes(card.Types));
-                    }
-                    else
-                    {
-                        command.CommandText = @"
-                            UPDATE Card
-                            SET
-                                Count = @newCount,
-                                Price = @price,
-                                Rank = @rank,
-                                OracleText = @OracleText,
-                                Colors = @Colors,
-                                ColorIdentity = @ColorIdentity,
-                                ManaCost = @ManaCost,
-                                ConvertedManaCost = @ConvertedManaCost,
-                                Types = @Types
-                            WHERE ID = @cardID;
-                        ";
-
-                        command.Parameters.AddWithValue(
-                            "@newCount",
-                            sameCardInLocation.Count + count);
-
-                        command.Parameters.AddWithValue(
-                            "@price",
-                            Math.Round(card.Price, 2));
-
-                        command.Parameters.AddWithValue(
-                            "@rank",
-                            card.Rank);
-
-                        command.Parameters.AddWithValue(
-                            "@OracleText",
-                            card.OracleText ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@Colors",
-                            card.Colors ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ColorIdentity",
-                            card.ColorIdentity ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ManaCost",
-                            card.ManaCost ?? "");
-
-                        command.Parameters.AddWithValue(
-                            "@ConvertedManaCost",
-                            card.ConvertedManaCost);
-
-                        command.Parameters.AddWithValue(
-                            "@Types",
-                            SerializeTypes(card.Types));
-
-                        command.Parameters.AddWithValue(
-                            "@cardID",
-                            sameCardInLocation.ID);
-                    }
-
-                    await command.ExecuteNonQueryAsync();
-
-                    if (sameCardInLocation == null &&
-                        card.CardFaces != null &&
-                        card.CardFaces.Count > 0)
-                    {
-                        command.Parameters.Clear();
-                        command.CommandText = "SELECT last_insert_rowid();";
-                        var cardID = Convert.ToInt32(await command.ExecuteScalarAsync());
-
-                        foreach (var cardFace in card.CardFaces)
-                        {
-                            if (cardFace == null)
-                            {
-                                continue;
-                            }
-
-                            command.Parameters.Clear();
-                            command.CommandText = @"
-                                INSERT INTO CardFace
-                                (
-                                    CardID,
-                                    Name,
-                                    OracleText,
-                                    ImageUrl,
-                                    Colors,
-                                    ManaCost,
-                                    Types
-                                )
-                                VALUES
-                                (
-                                    @CardID,
-                                    @Name,
-                                    @OracleText,
-                                    @ImageUrl,
-                                    @Colors,
-                                    @ManaCost,
-                                    @Types
-                                );
-                            ";
-
-                            command.Parameters.AddWithValue("@CardID", cardID);
-                            command.Parameters.AddWithValue("@Name", cardFace.Name ?? "");
-                            command.Parameters.AddWithValue(
-                                "@OracleText",
-                                cardFace.OracleText ?? "");
-                            command.Parameters.AddWithValue(
-                                "@ImageUrl",
-                                cardFace.ImageUrl ?? "");
-                            command.Parameters.AddWithValue(
-                                "@Colors",
-                                cardFace.Colors ?? "");
-                            command.Parameters.AddWithValue(
-                                "@ManaCost",
-                                cardFace.ManaCost ?? "");
-                            command.Parameters.AddWithValue(
-                                "@Types",
-                                SerializeTypes(cardFace.Types));
-
-                            await command.ExecuteNonQueryAsync();
-                        }
-                    }
+                    await AddCard(command, card, locationID, count, sameCardInLocation);
 
                     transaction.Commit();
                 }
             }
         }
 
+        private static async Task AddCard(SQLiteCommand command, Card card, int locationID, int count, Card sameCardInLocation)
+        {
+            if (sameCardInLocation == null)
+            {
+                command.CommandText = @"
+                    INSERT INTO Card
+                    (
+                        Name,
+                        PrintID,
+                        ImageUrl,
+                        Count,
+                        LocationID,
+                        Price,
+                        Rank,
+                        OracleText,
+                        Colors,
+                        ColorIdentity,
+                        ManaCost,
+                        ConvertedManaCost,
+                        Types
+                    )
+                    VALUES
+                    (
+                        @Name,
+                        @PrintID,
+                        @ImageUrl,
+                        @Count,
+                        @LocationID,
+                        @Price,
+                        @Rank,
+                        @OracleText,
+                        @Colors,
+                        @ColorIdentity,
+                        @ManaCost,
+                        @ConvertedManaCost,
+                        @Types
+                    );
+                ";
+
+                command.Parameters.AddWithValue(
+                    "@Name",
+                    card.Name);
+
+                command.Parameters.AddWithValue(
+                    "@PrintID",
+                    card.PrintID ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ImageUrl",
+                    card.ImageUrl ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@Count",
+                    count);
+
+                command.Parameters.AddWithValue(
+                    "@LocationID",
+                    locationID);
+
+                command.Parameters.AddWithValue(
+                    "@Price",
+                    Math.Round(card.Price, 2));
+
+                command.Parameters.AddWithValue(
+                    "@Rank",
+                    card.Rank);
+
+                command.Parameters.AddWithValue(
+                    "@OracleText",
+                    card.OracleText ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@Colors",
+                    card.Colors ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ColorIdentity",
+                    card.ColorIdentity ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ManaCost",
+                    card.ManaCost ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ConvertedManaCost",
+                    card.ConvertedManaCost);
+
+                command.Parameters.AddWithValue(
+                    "@Types",
+                    SerializeTypes(card.Types));
+            }
+            else
+            {
+                command.CommandText = @"
+                    UPDATE Card
+                    SET
+                        Count = @newCount,
+                        Price = @price,
+                        Rank = @rank,
+                        OracleText = @OracleText,
+                        Colors = @Colors,
+                        ColorIdentity = @ColorIdentity,
+                        ManaCost = @ManaCost,
+                        ConvertedManaCost = @ConvertedManaCost,
+                        Types = @Types
+                    WHERE ID = @cardID;
+                ";
+
+                command.Parameters.AddWithValue(
+                    "@newCount",
+                    sameCardInLocation.Count + count);
+
+                command.Parameters.AddWithValue(
+                    "@price",
+                    Math.Round(card.Price, 2));
+
+                command.Parameters.AddWithValue(
+                    "@rank",
+                    card.Rank);
+
+                command.Parameters.AddWithValue(
+                    "@OracleText",
+                    card.OracleText ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@Colors",
+                    card.Colors ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ColorIdentity",
+                    card.ColorIdentity ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ManaCost",
+                    card.ManaCost ?? "");
+
+                command.Parameters.AddWithValue(
+                    "@ConvertedManaCost",
+                    card.ConvertedManaCost);
+
+                command.Parameters.AddWithValue(
+                    "@Types",
+                    SerializeTypes(card.Types));
+
+                command.Parameters.AddWithValue(
+                    "@cardID",
+                    sameCardInLocation.ID);
+            }
+
+            await command.ExecuteNonQueryAsync();
+
+            if (sameCardInLocation == null &&
+                card.CardFaces != null &&
+                card.CardFaces.Count > 0)
+            {
+                command.Parameters.Clear();
+                command.CommandText = "SELECT last_insert_rowid();";
+                var cardID = Convert.ToInt32(await command.ExecuteScalarAsync());
+
+                foreach (var cardFace in card.CardFaces)
+                {
+                    if (cardFace == null)
+                    {
+                        continue;
+                    }
+
+                    command.Parameters.Clear();
+                    command.CommandText = @"
+                        INSERT INTO CardFace
+                        (
+                            CardID,
+                            Name,
+                            OracleText,
+                            ImageUrl,
+                            Colors,
+                            ManaCost,
+                            Types
+                        )
+                        VALUES
+                        (
+                            @CardID,
+                            @Name,
+                            @OracleText,
+                            @ImageUrl,
+                            @Colors,
+                            @ManaCost,
+                            @Types
+                        );
+                    ";
+
+                    command.Parameters.AddWithValue("@CardID", cardID);
+                    command.Parameters.AddWithValue("@Name", cardFace.Name ?? "");
+                    command.Parameters.AddWithValue(
+                        "@OracleText",
+                        cardFace.OracleText ?? "");
+                    command.Parameters.AddWithValue(
+                        "@ImageUrl",
+                        cardFace.ImageUrl ?? "");
+                    command.Parameters.AddWithValue(
+                        "@Colors",
+                        cardFace.Colors ?? "");
+                    command.Parameters.AddWithValue(
+                        "@ManaCost",
+                        cardFace.ManaCost ?? "");
+                    command.Parameters.AddWithValue(
+                        "@Types",
+                        SerializeTypes(cardFace.Types));
+
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+
+        }
+
+        public static async Task AddCardsBulk(IReadOnlyList<BulkCardImport.Placement> placements)
+        {
+            using (var connection = Database.GetConnection())
+            {
+                await connection.OpenAsync();
+                await AddCardsBulk(connection, placements);
+            }
+        }
+
+        internal static async Task AddCardsBulk(SQLiteConnection connection, IReadOnlyList<BulkCardImport.Placement> placements)
+        {
+            if (placements.Count == 0) throw new InvalidOperationException("No cards to add.");
+            using (var transaction = connection.BeginTransaction())
+            using (var command = connection.CreateCommand())
+            {
+                command.Transaction = transaction;
+                foreach (var placement in placements)
+                {
+                    if (placement.Count <= 0) throw new InvalidOperationException("Count must be positive.");
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@location", placement.Location.ID);
+                    command.CommandText = @"SELECT l.Capacity - COALESCE(SUM(c.Count), 0), l.MinPrice
+                        FROM Location l LEFT JOIN Card c ON c.LocationID=l.ID
+                        WHERE l.ID=@location GROUP BY l.ID, l.Capacity, l.MinPrice";
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync() || reader.GetInt64(0) < placement.Count || reader.GetDecimal(1) > placement.Card.Price)
+                            throw new InvalidOperationException("Location " + placement.Location.Code + " is no longer available. Import the file again.");
+                    }
+                    command.Parameters.AddWithValue("@name", placement.Card.Name);
+                    command.Parameters.AddWithValue("@print", placement.Card.PrintID ?? "");
+                    command.CommandText = "SELECT ID, Count FROM Card WHERE LocationID=@location AND Name=@name AND PrintID=@print LIMIT 1";
+                    Card existing = null;
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync()) existing = new Card { ID = reader.GetInt32(0), Count = reader.GetInt32(1) };
+                    }
+                    command.Parameters.Clear();
+                    await AddCard(command, placement.Card, placement.Location.ID, placement.Count, existing);
+                }
+                transaction.Commit();
+            }
+        }
         public static async Task<List<Card>> GetCards()
         {
             var cards = new List<Card>();

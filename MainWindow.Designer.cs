@@ -42,9 +42,9 @@
             this.scryfallSearchButton = new System.Windows.Forms.Button();
             this.locationManagementGroupBox = new System.Windows.Forms.GroupBox();
             this.exportOptionsManagement = new System.Windows.Forms.GroupBox();
+            this.csvImportButton = new System.Windows.Forms.Button();
             this.csvExportButton = new System.Windows.Forms.Button();
             this.defaultExportButton = new System.Windows.Forms.Button();
-            this.csvImportButton = new System.Windows.Forms.Button();
             this.cardManagementGroupBox.SuspendLayout();
             this.locationManagementGroupBox.SuspendLayout();
             this.exportOptionsManagement.SuspendLayout();
@@ -211,6 +211,19 @@
             this.exportOptionsManagement.TabStop = false;
             this.exportOptionsManagement.Text = "Import/export options";
             // 
+            // csvImportButton
+            // 
+            this.csvImportButton.Image = ((System.Drawing.Image)(resources.GetObject("csvImportButton.Image")));
+            this.csvImportButton.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
+            this.csvImportButton.Location = new System.Drawing.Point(242, 19);
+            this.csvImportButton.Name = "csvImportButton";
+            this.csvImportButton.Size = new System.Drawing.Size(112, 53);
+            this.csvImportButton.TabIndex = 11;
+            this.csvImportButton.Text = "CSV import";
+            this.csvImportButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.csvImportButton.UseMnemonic = false;
+            this.csvImportButton.UseVisualStyleBackColor = true;
+            // 
             // csvExportButton
             // 
             this.csvExportButton.Image = ((System.Drawing.Image)(resources.GetObject("csvExportButton.Image")));
@@ -236,19 +249,6 @@
             this.defaultExportButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.defaultExportButton.UseMnemonic = false;
             this.defaultExportButton.UseVisualStyleBackColor = true;
-            // 
-            // csvImportButton
-            // 
-            this.csvImportButton.Image = ((System.Drawing.Image)(resources.GetObject("csvImportButton.Image")));
-            this.csvImportButton.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
-            this.csvImportButton.Location = new System.Drawing.Point(242, 19);
-            this.csvImportButton.Name = "csvImportButton";
-            this.csvImportButton.Size = new System.Drawing.Size(112, 53);
-            this.csvImportButton.TabIndex = 11;
-            this.csvImportButton.Text = "CSV import";
-            this.csvImportButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.csvImportButton.UseMnemonic = false;
-            this.csvImportButton.UseVisualStyleBackColor = true;
             // 
             // MainWindow
             // 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 
 namespace MTGStorage
@@ -12,9 +12,15 @@ namespace MTGStorage
 
         public void UpdateProgress(int current, int max)
         {
-            var percentage = current / (float)max;
-            progressBar.Value = (int)Math.Ceiling(percentage * 100);
-            progressLabel.Text = $"Searching through pages. {current}/{max}";
+            UpdateProgress(current, max, "Searching through pages.");
+        }
+
+        public void UpdateProgress(int current, int max, string message)
+        {
+            if (IsDisposed) return;
+            var percentage = max > 0 ? current / (double)max : 0;
+            progressBar.Value = Math.Max(0, Math.Min(100, (int)Math.Ceiling(percentage * 100)));
+            progressLabel.Text = $"{message} {current}/{max}";
         }
     }
 }

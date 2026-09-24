@@ -1,5 +1,8 @@
-﻿using System;
+using System;
 using System.Drawing;
+using System.Collections.Generic;
+using System.IO;
+using MTGStorage.Features;
 using System.Windows.Forms;
 using MTGStorage.Database.Endpoints;
 
@@ -98,14 +101,56 @@ namespace MTGStorage
             scryfallSearchWindow.ShowDialog();
         }
 
-        private void removeCardBulkButton_Click(object sender, EventArgs e)
+        private async void addCardBulkButton_Click(object sender, EventArgs e)
         {
-            // TODO remove bulk button handle
-        }
-
-        private void addCardBulkButton_Click(object sender, EventArgs e)
-        {
-            // TODO add bulk button handle
+            using (var dialog = new OpenFileDialog
+            {
+                Title = "Select cards to add (Name [Count], default: 1)",
+                Filter = "Text files (*.txt)|*.txt", CheckFileExists = true, Multiselect = false
+            })
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                addCardBulkButton.Enabled = false;
+                UseWaitCursor = true;
+                try
+                {
+                    List<BulkCardImport.Placement> placements;
+                    using (var loading = new SryfallSearchLoadingWindow())
+                    {
+                        loading.ControlBox = false;
+                        loading.UpdateProgress(0, 0, "Reading file.");
+                        loading.Show(this);
+                        Enabled = false;
+                        try
+                        {
+                            // Let the loading window paint before reading and parsing the file.
+                            await System.Threading.Tasks.Task.Yield();
+                            placements = await BulkCardImport.Prepare(
+                                File.ReadAllLines(dialog.FileName), loading.UpdateProgress);
+                        }
+                        finally
+                        {
+                            Enabled = true;
+                            loading.Close();
+                        }
+                    }
+                    UseWaitCursor = false;
+                    using (var window = new CardBulkShipmentWindow())
+                    {
+                        window.InitImport(placements);
+                        window.ShowDialog(this);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, ex.Message, "Bulk add", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    UseWaitCursor = false;
+                    addCardBulkButton.Enabled = true;
+                }
+            }
         }
 
         private void csvExportButton_Click(object sender, EventArgs e)

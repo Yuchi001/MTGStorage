@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MTGStorage.CustomUI;
 using MTGStorage.Database.DataObjects;
 using MTGStorage.Database.Endpoints;
 using MTGStorage.Features;
@@ -16,7 +15,9 @@ namespace MTGStorage
     public partial class CardBulkShipmentWindow : Form
     {
         private List<LocationCardPair> LocationCardPairs;
-        private CardElement _hoverControl;
+        private bool _isLoadingImage;
+        private List<BulkCardImport.Placement> _importPlacements;
+        private bool _isSaving;
         private int? _sourceLocationId;
         
         public CardBulkShipmentWindow()
@@ -24,6 +25,92 @@ namespace MTGStorage
             InitializeComponent();
         }
 
+        public void InitImport(List<BulkCardImport.Placement> placements)
+        {
+            _importPlacements = placements;
+            Text = "MTG Storage - bulk add";
+            mainLabel.Text = "Bulk Add";
+            informationLabel.Text = "Put each listed card into the given location";
+            confirmButton.Text = "Complete";
+            set.Name = "owned";
+            set.HeaderText = "owned";
+            set.ValueType = typeof(long);
+            var priceColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "price", HeaderText = "Price (EUR)", ReadOnly = true, Width = 80,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "0.00" }
+            };
+            cardLocationPairTable.Columns.Insert(completed.Index, priceColumn);
+            cardLocationPairTable.Columns.Insert(image.Index, new DataGridViewCheckBoxColumn
+            {
+                Name = "remove", HeaderText = "Remove", Width = 60
+            });
+            // Keep the shipment layout, with extra room for Price and Remove.
+            MaximumSize = new Size(690, 500);
+            MinimumSize = MaximumSize;
+            cardLocationPairTable.Width += 140;
+            mainLabel.Width += 140;
+            informationLabel.Width += 140;
+            confirmButton.Left += 140;
+            cancelButton.Width += 140;
+            foreach (var placement in placements)
+            {
+                int index = cardLocationPairTable.Rows.Add(placement.Card.Name, placement.Owned,
+                    placement.Location.Code, placement.Count, placement.Card.Price, false, false);
+                cardLocationPairTable.Rows[index].Tag = placement;
+            }
+            confirmButton.Enabled = false;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (_isSaving) e.Cancel = true;
+            base.OnFormClosing(e);
+        }
+
+        private async Task CompleteImport()
+        {
+            if (_isSaving || !AllCompleted()) return;
+            _isSaving = true;
+            confirmButton.Enabled = cancelButton.Enabled = cardLocationPairTable.Enabled = false;
+            try
+            {
+                var selected = GetImportPlacementsToSave();
+                if (selected.Count > 0) await CardEndpoints.AddCardsBulk(selected);
+                var addedCount = selected.Sum(placement => (long)placement.Count);
+                MessageBox.Show(this, $"Added {addedCount} card(s) to storage.",
+                    "Bulk add completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _isSaving = false;
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "No cards were added. " + ex.Message,
+                    "Bulk add", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _isSaving = false;
+                if (!IsDisposed)
+                {
+                    cancelButton.Enabled = cardLocationPairTable.Enabled = true;
+                    confirmButton.Enabled = AllCompleted();
+                }
+            }
+        }
+
+        private bool AllCompleted() => cardLocationPairTable.Rows.Count > 0 &&
+            cardLocationPairTable.Rows.Cast<DataGridViewRow>()
+                .All(row => IsRemoved(row) || Convert.ToBoolean(row.Cells["Completed"].Value ?? false));
+
+        private bool IsRemoved(DataGridViewRow row) => _importPlacements != null &&
+            Convert.ToBoolean(row.Cells["remove"].Value ?? false);
+
+        private List<BulkCardImport.Placement> GetImportPlacementsToSave() =>
+            cardLocationPairTable.Rows.Cast<DataGridViewRow>()
+                .Where(row => !IsRemoved(row))
+                .Select(row => (BulkCardImport.Placement)row.Tag).ToList();
         public async Task Init(ShipmentManager shipmentManager, int? sourceLocationId = null)
         {
             _sourceLocationId = sourceLocationId;
@@ -42,7 +129,6 @@ namespace MTGStorage
                 int rowIndex = cardLocationPairTable.Rows.Add(
                     pair.Card.Name,
                     pair.Card.PrintID,
-                    await LoadImage(pair.Card.ImageUrl),
                     pair.Location.Code,
                     pair.Card.Count,
                     false
@@ -52,42 +138,47 @@ namespace MTGStorage
 
                 row.Tag = pair.Card;
             }
-            
-            async Task<Image> LoadImage(string url)
+        }
+
+        private async void cardLocationPairTable_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != image.Index || _isLoadingImage)
+                return;
+
+            var tag = cardLocationPairTable.Rows[e.RowIndex].Tag;
+            var card = (tag as BulkCardImport.Placement)?.Card ?? tag as Card;
+            if (string.IsNullOrEmpty(card?.ImageUrl))
+                return;
+
+            _isLoadingImage = true;
+            try
             {
-                if (string.IsNullOrEmpty(url)) return null;
                 using (var client = new HttpClient())
                 {
-                    var bytes = await client.GetByteArrayAsync(url);
+                    var bytes = await client.GetByteArrayAsync(card.ImageUrl);
+                    if (IsDisposed || Disposing) return;
 
                     using (var stream = new MemoryStream(bytes))
+                    using (var cardImage = Image.FromStream(stream))
                     {
-                        using (var temp = Image.FromStream(stream))
-                        {
-                            return new Bitmap(temp);
-                        }
+                        ShowCardImage(cardImage);
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                if (!IsDisposed && !Disposing)
+                    MessageBox.Show(this, "Unable to load card image: " + ex.Message,
+                        "Card image", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _isLoadingImage = false;
+            }
         }
-        
-        private void cardLocationPairTable_CellMouseDoubleClick(
-            object sender,
-            DataGridViewCellMouseEventArgs e)
+
+        private void ShowCardImage(Image image)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
-                return;
-
-            if (cardLocationPairTable.Columns[e.ColumnIndex].Name != "image")
-                return;
-
-            var image = cardLocationPairTable.Rows[e.RowIndex]
-                .Cells[e.ColumnIndex]
-                .Value as Image;
-
-            if (image == null)
-                return;
-
             using (var form = new Form())
             {
                 form.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -126,43 +217,10 @@ namespace MTGStorage
 
                 form.Controls.Add(borderPanel);
 
-                form.ShowDialog();
+                form.ShowDialog(this);
             }
         }
         
-        private void cardLocationPairTable_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0)
-                return;
-
-            var row = cardLocationPairTable.Rows[e.RowIndex];
-
-            var card = row.DataBoundItem as Card;
-            if (card == null)
-                return;
-
-            if (_hoverControl == null) _hoverControl = new CardElement(card.ImageUrl);
-
-            var mousePosition = Cursor.Position;
-
-            _hoverControl.Location = PointToClient(
-                new Point(mousePosition.X + 15, mousePosition.Y + 15)
-            );
-
-            if (!_hoverControl.Visible)
-            {
-                Controls.Add(_hoverControl);
-                _hoverControl.BringToFront();
-                _hoverControl.Show();
-            }
-        }
-
-        private void cardLocationPairTable_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
-        {
-            if (_hoverControl != null)
-                _hoverControl.Hide();
-        }
-
         public class LocationCardPair
         {
             public readonly Card Card;
@@ -206,12 +264,14 @@ namespace MTGStorage
 
         private void cancelButton_Click(object sender, EventArgs e)
         {
-            if (_sourceLocationId.HasValue) { Close(); return; }
+            if (_importPlacements != null || _sourceLocationId.HasValue) { Close(); return; }
             Application.Restart();
         }
 
         private async void confirmButton_Click(object sender, EventArgs e)
         {
+            if (_importPlacements != null) { await CompleteImport(); return; }
+
             var result = MessageBox.Show(
                 "Do you want to continue? All selected cards will be removed from your storage.",
                 "Question",
@@ -222,17 +282,13 @@ namespace MTGStorage
 
             foreach (var pair in LocationCardPairs) await CardEndpoints.RemoveCard(pair.Card.ID, pair.Card.Count);
             
-            if (_sourceLocationId.HasValue) { Close(); return; }
+            if (_importPlacements != null || _sourceLocationId.HasValue) { Close(); return; }
             Application.Restart();
         }
 
         private void cardLocationPairTable_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            var allCompleted = cardLocationPairTable.Rows
-                .Cast<DataGridViewRow>()
-                .Where(row => !row.IsNewRow)
-                .All(row => Convert.ToBoolean(row.Cells["Completed"].Value ?? false));
-            confirmButton.Enabled = allCompleted;
+            confirmButton.Enabled = !_isSaving && AllCompleted();
         }
 
         private void cardLocationPairTable_CurrentCellDirtyStateChanged(object sender, EventArgs e)

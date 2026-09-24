@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using System.Threading;
 using MTGStorage.Database.DataObjects;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -11,6 +13,49 @@ namespace MTGStorage.Database.Endpoints
 {
     public static class ScryfallEndpoints
     {
+        private static readonly SemaphoreSlim NamedRequestGate = new SemaphoreSlim(1, 1);
+        private static readonly Stopwatch NamedRequestInterval = new Stopwatch();
+
+        private static async Task<HttpResponseMessage> GetNamedResponse(HttpClient client, string url)
+        {
+            await NamedRequestGate.WaitAsync();
+            try
+            {
+                // Shared by exact and fuzzy lookups, including concurrent callers.
+                while (NamedRequestInterval.IsRunning)
+                {
+                    var remaining = 600 - NamedRequestInterval.Elapsed.TotalMilliseconds;
+                    if (remaining <= 0) break;
+                    await Task.Delay((int)Math.Ceiling(remaining));
+                }
+
+                NamedRequestInterval.Restart();
+                return await client.GetAsync(url);
+            }
+            finally
+            {
+                NamedRequestGate.Release();
+            }
+        }
+        public static async Task<ScryfallCard> GetExactCard(string name, string set = null)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", "MTGStorage/1.0");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                var url = "https://api.scryfall.com/cards/named?exact=" + Uri.EscapeDataString(name);
+                if (!string.IsNullOrEmpty(set)) url += "&set=" + Uri.EscapeDataString(set);
+                using (var response = await GetNamedResponse(client, url))
+                {
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+                    response.EnsureSuccessStatusCode();
+                    var card = JsonConvert.DeserializeObject<ScryfallCard>(await response.Content.ReadAsStringAsync());
+                    if (card.image_uris == null) card.image_uris = card.card_faces?.FirstOrDefault()?.image_uris;
+                    if (card.image_uris == null) throw new InvalidOperationException("No image available for " + name);
+                    return card;
+                }
+            }
+        }
         public static async Task<List<string>> GetCardNames(string query)
         {
             using (var client = new HttpClient())
@@ -49,9 +94,9 @@ namespace MTGStorage.Database.Endpoints
                     "Accept",
                     "application/json");
                 
-                var url = "https://api.scryfall.com/cards/named?fuzzy=" + name.Replace(" ", "+");
+                var url = "https://api.scryfall.com/cards/named?fuzzy=" + Uri.EscapeDataString(name);
 
-                var response = await client.GetAsync(url);
+                var response = await GetNamedResponse(client, url);
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
