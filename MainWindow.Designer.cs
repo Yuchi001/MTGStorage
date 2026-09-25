@@ -213,6 +213,7 @@
             // 
             // csvImportButton
             // 
+            this.csvImportButton.Image = ((System.Drawing.Image)(resources.GetObject("csvImportButton.Image")));
             this.csvImportButton.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
             this.csvImportButton.Location = new System.Drawing.Point(242, 19);
             this.csvImportButton.Name = "csvImportButton";

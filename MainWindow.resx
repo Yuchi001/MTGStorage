@@ -195,6 +195,15 @@
         AAAAAElFTkSuQmCC
 </value>
   </data>
+  <data name="csvImportButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAONJREFUWEfd
+        ksEJAjEUBdOEx63Ag7IiYiUWIF482IBtWIYVeLAN8WgDHmxgheCD7GA2Ma5k44M5JJJ9w/8a88qmqpp3
+        6Pefh8XZBI51bdF5PpskYYwRcckmwJFfV2sL7x/3Wycq5jkowqJsApf9ySIBroKFhAK894pkF1AowuLt
+        eWpZHHYtWORj+AIKi2NxCkJ0J7uARqYPa9RagW8VuqfYxysYnMC3lC8QGj1XoHN5AqPluHHhKFMpT0Aj
+        pFAIFpcvwD+fj/8TSIXF5QkoesAPpVKuQN+UI+DEfdQn0eHDvmjlCWmKwncwOoUvAAAAAElFTkSuQmCC
+</value>
+  </data>
   <data name="csvExportButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAANpJREFUWEfd
